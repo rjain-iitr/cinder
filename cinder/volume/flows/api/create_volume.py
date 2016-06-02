@@ -489,7 +489,8 @@ class EntryCreateTask(flow_utils.CinderTask):
                     'name', 'reservations', 'size', 'snapshot_id',
                     'source_volid', 'volume_type_id', 'encryption_key_id',
                     'source_replicaid', 'consistencygroup_id',
-                    'cgsnapshot_id', 'multiattach','volume_from_cache','backup_id']
+                    'cgsnapshot_id', 'multiattach','volume_from_cache',
+                    'backup_id','encrypted']
         super(EntryCreateTask, self).__init__(addons=[ACTION],
                                               requires=requires)
         self.db = db
@@ -513,6 +514,10 @@ class EntryCreateTask(flow_utils.CinderTask):
             snapshot_id = kwargs.pop('backup_id')
         except:
             pass
+        
+        encryption_id='BLANK'
+        #************to do **************
+        #encryption_id=KIMS.get_encrypted_key(context.project_id,kwargs.pop('id'))
 
         volume_properties = {
             'size': kwargs.pop('size'),
@@ -527,7 +532,9 @@ class EntryCreateTask(flow_utils.CinderTask):
             'display_name': kwargs.pop('name'),
             'replication_status': 'disabled',
             'multiattach': kwargs.pop('multiattach'),
-            'miscellaneous': misc
+            'miscellaneous': misc,
+            'encrypted':kwargs.pop('encrypted'),
+            'encryption_id':encryption_id
         }
 
         # Merge in the other required arguments which should provide the rest
