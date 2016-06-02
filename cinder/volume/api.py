@@ -203,7 +203,7 @@ class API(base.Base):
                availability_zone=None, source_volume=None,
                scheduler_hints=None,
                source_replica=None, consistencygroup=None,
-               cgsnapshot=None, multiattach=False,volume_from_cache=None, backup_id=None):
+               cgsnapshot=None, multiattach=False,volume_from_cache=None, backup_id=None,encrypted=False):
 
         # NOTE(jdg): we can have a create without size if we're
         # doing a create from snap or volume.  Currently
@@ -281,6 +281,7 @@ class API(base.Base):
             'multiattach': multiattach,
             'volume_from_cache':volume_from_cache,
             'backup_id':backup_id,
+            'encrypted':encrypted,
         }
         try:
             if cgsnapshot:
