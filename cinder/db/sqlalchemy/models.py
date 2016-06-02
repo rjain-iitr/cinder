@@ -165,6 +165,9 @@ class Volume(BASE, CinderBase):
     bootable = Column(Boolean, default=False)
     multiattach = Column(Boolean, default=False)
 
+    encrypted = Column(Boolean, default=False)
+    encryption_id = Column(String(255))
+
     replication_status = Column(String(255))
     replication_extended_status = Column(String(255))
     replication_driver_data = Column(String(255))
