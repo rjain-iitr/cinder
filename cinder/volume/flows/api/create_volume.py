@@ -514,11 +514,11 @@ class EntryCreateTask(flow_utils.CinderTask):
             snapshot_id = kwargs.pop('backup_id')
         except:
             pass
-        
+        encrypted=kwargs.pop('encrypted')
         encryption_id='BLANK'
         #************to do **************
-        #encryption_id=KIMS.get_encrypted_key(context.project_id,kwargs.pop('id'))
-
+        #if encrypted == true:
+        #    encryption_id=KIMS.get_encrypted_key(context.project_id,kwargs.pop('id'))
         volume_properties = {
             'size': kwargs.pop('size'),
             'user_id': context.user_id,
