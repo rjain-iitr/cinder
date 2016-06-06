@@ -225,7 +225,9 @@ class API(base.Base):
             msg = _("Unable to create snapshot of the volume. Volume status must be 'available/in-use'.")
             LOG.error(msg)
             raise exception.InvalidVolume(reason=msg)
-
+        volume_type_id=volume['volume_type_id']
+        if volume_type_id==None
+            volume['volume_type_id']=1
         options = {'user_id': context.user_id,
                    'project_id': context.project_id,
                    'display_name': name,
@@ -235,6 +237,9 @@ class API(base.Base):
                    'container': container,
                    'parent_id': parent_id,
                    'size': volume['size'],
+                   'volume_type_id': volume_type_id,
+                   'encrypted': volume['encrypted'],
+                   'encryption_id': volume['encryption_id'],
                    'host': volume_host, }
         try:
             backup = self.db.backup_create(context, options)
@@ -279,7 +284,9 @@ class API(base.Base):
         if size is None:
             msg = _('Backup to be restored has invalid size')
             raise exception.InvalidBackup(reason=msg)
-
+        encrypted=backup['encrypted']
+        encryption_id=backup['encryption_id']
+        volume_type=backup['volume_type_id']
         # Create a volume if none specified. If a volume is specified check
         # it is large enough for the backup
         if volume_id is None:
@@ -301,7 +308,7 @@ class API(base.Base):
                          "backup %(backup_id)s"),
                      {'size': vol_size, 'backup_id': backup_id},
                      context=context)
-            volume = self.volume_api.create(context, vol_size, name, description, backup_id=backup_id)
+            volume = self.volume_api.create(context, vol_size, name, description, backup_id=backup_id,volume_type=volume_type,encrypted=encrypted)
             volume_id = volume['id']
 
             while True:
@@ -334,6 +341,9 @@ class API(base.Base):
         self.db.backup_update(context, backup_id, {'status': 'restoring'})
         self.db.volume_update(context, volume_id, {'status':
                                                    'restoring-backup'})
+        if encrypted==1:
+               self.db.volume_update(context, volume_id, {'encryption_id':
+                                                    encryption_id})
 
         volume_host = volume_utils.extract_host(volume['host'], 'host')
         self.backup_rpcapi.restore_backup(context,
