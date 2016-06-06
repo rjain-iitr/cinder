@@ -538,6 +538,10 @@ class Backup(BASE, CinderBase):
     time_stamp = Column(String(255))
     version = Column(Float(precision='3,1'))
     actual_size = Column(BigInteger())
+    
+    volume_type_id = Column(String(36))
+    encrypted = Column(Boolean, default=False)
+    encryption_id = Column(String(255))
 
     @validates('fail_reason')
     def validate_fail_reason(self, key, fail_reason):
