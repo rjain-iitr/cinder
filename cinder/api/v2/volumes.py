@@ -407,7 +407,7 @@ class VolumeController(wsgi.Controller):
                 raise exc.HTTPNotFound(explanation=msg)
         else:
             kwargs['volume_type']=volume_types.get_volume_type_by_name(
-                                     context, "hdd")
+                                     context, "standard")
 
         kwargs['metadata'] = volume.get('metadata', None)
 
