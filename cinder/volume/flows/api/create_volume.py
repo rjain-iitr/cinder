@@ -515,9 +515,11 @@ class EntryCreateTask(flow_utils.CinderTask):
         except:
             pass
         encrypted=kwargs.pop('encrypted')
-        encryption_id='BLANK'
+        encryption_id=None
+        if encrypted == 1 and snapshot_id !='' :
+            encryption_id='BLANK'
         #************to do **************
-        #if encrypted == true:
+        #if encrypted == 1 and snashot_id !='':
         #    encryption_id=KIMS.get_encrypted_key(context.project_id,kwargs.pop('id'))
         volume_properties = {
             'size': kwargs.pop('size'),
@@ -533,7 +535,7 @@ class EntryCreateTask(flow_utils.CinderTask):
             'replication_status': 'disabled',
             'multiattach': kwargs.pop('multiattach'),
             'miscellaneous': misc,
-            'encrypted':kwargs.pop('encrypted'),
+            'encrypted':encrypted,
             'encryption_id':encryption_id
         }
 
