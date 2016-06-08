@@ -226,8 +226,8 @@ class API(base.Base):
             LOG.error(msg)
             raise exception.InvalidVolume(reason=msg)
         volume_type_id=volume['volume_type_id']
-        if volume_type_id==None
-            volume['volume_type_id']=1
+        if volume_type_id is None:
+            volume_type_id=1
         options = {'user_id': context.user_id,
                    'project_id': context.project_id,
                    'display_name': name,
