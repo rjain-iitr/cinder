@@ -1466,9 +1466,9 @@ class API(base.Base):
     def _initialize_connection_(self, volume, connector):
         hosts, ports = self._get_mon_addrs()
         encryption_id=None
-        encrytped=volume['encrypted']
+        encrypted=volume['encrypted']
         if encrytped ==1:
-           encryption_id=volume['encryption_id']
+             encryption_id=volume['encryption_id']
         data = {
             'driver_volume_type': 'rbd',
             'data': {
@@ -1476,6 +1476,8 @@ class API(base.Base):
                                    volume['name']),
                 'hosts': hosts,
                 'ports': ports,
+                'encrypted':encrypted,
+                'encryption':encryption_id,
                 'auth_enabled': (self.rbd_user is not None),
                 'auth_username': self.rbd_user,
                 'secret_type': 'ceph',
