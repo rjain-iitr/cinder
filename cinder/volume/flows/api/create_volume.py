@@ -27,7 +27,7 @@ from cinder import quota
 from cinder import utils
 from cinder.volume.flows import common
 from cinder.volume import volume_types
-
+import cinder.kims_api as kims_api
 LOG = logging.getLogger(__name__)
 
 ACTION = 'volume:create'
@@ -517,10 +517,8 @@ class EntryCreateTask(flow_utils.CinderTask):
         encrypted=kwargs.pop('encrypted')
         encryption_id=None
         if encrypted == 1 and snapshot_id !='' :
-            encryption_id='BLANK'
-        #************to do **************
-        #if encrypted == 1 and snashot_id !='':
-        #    encryption_id=KIMS.get_encrypted_key(context.project_id,kwargs.pop('id'))
+            encryption_id=kims_api.CreateEncryptedKey(context.project_id)
+
         volume_properties = {
             'size': kwargs.pop('size'),
             'user_id': context.user_id,
