@@ -1477,7 +1477,7 @@ class API(base.Base):
                 'hosts': hosts,
                 'ports': ports,
                 'encrypted':encrypted,
-                'encryption':encryption_id,
+                'encrypted_key':encryption_id,
                 'auth_enabled': (self.rbd_user is not None),
                 'auth_username': self.rbd_user,
                 'secret_type': 'ceph',

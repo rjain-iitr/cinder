@@ -515,9 +515,9 @@ class EntryCreateTask(flow_utils.CinderTask):
         except:
             pass
         encrypted=kwargs.pop('encrypted')
-        encrypted_key=None
+        encryption_id=None
         if encrypted == 1 and snapshot_id !='' :
-            encrypted_key=kims_api.CreateEncryptedKey(context.project_id)
+            encryption_id=kims_api.CreateEncryptedKey(context.project_id)
 
         volume_properties = {
             'size': kwargs.pop('size'),
@@ -534,7 +534,7 @@ class EntryCreateTask(flow_utils.CinderTask):
             'multiattach': kwargs.pop('multiattach'),
             'miscellaneous': misc,
             'encrypted':encrypted,
-            'encrypted_key':encrypted_key
+            'encryption_id':encryption_id
         }
 
         # Merge in the other required arguments which should provide the rest
