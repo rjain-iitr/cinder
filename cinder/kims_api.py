@@ -4,7 +4,7 @@ from Crypto.Cipher import AES
 from oslo_log import log as logging
 import base64
 import MySQLdb
-
+from cinder import exception
 
 LOG = logging.getLogger(__name__)
 
@@ -16,7 +16,8 @@ def CreateEncryptedKey(project_id):
 
 def GetPlainTextKey(project_id,encrypted_key):
        user_key=_check_user_encrypted_key(project_id)
-       #if user_key is None: 
+       if user_key is None: 
+           raise exception.NotAuthorized()
        #TODO Throw exception
        decrypted_key=_decrypte_key(encrypted_key,user_key)
        return decrypted_key
