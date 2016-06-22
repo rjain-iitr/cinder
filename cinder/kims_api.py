@@ -19,7 +19,8 @@ def GetPlainTextKey(project_id,encrypted_key):
        if user_key is None: 
            raise exception.NotAuthorized()
        #TODO Throw exception
-       decrypted_key=_decrypte_key(encrypted_key,user_key)
+       user_decrypted_key=_decrypte_key(user_key,MASTER_KEY)
+       decrypted_key=_decrypte_key(encrypted_key,user_decrypted_key)
        return decrypted_key
 
 def _get_user_deprecated_key(project_id):
