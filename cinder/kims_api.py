@@ -72,6 +72,7 @@ def _create_new_volume_encrypted_key(user_key):
        return encrypted_key
 
 def _create_new_volume_key():
+       #64 Cipher_key + 16 IV
        key=id_generator(80)
        return key
 

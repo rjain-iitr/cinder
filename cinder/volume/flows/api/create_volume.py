@@ -516,7 +516,7 @@ class EntryCreateTask(flow_utils.CinderTask):
             pass
         encrypted=kwargs.pop('encrypted')
         encryption_id=None
-        if encrypted == 1 and snapshot_id !='' :
+        if encrypted == 1 and snapshot_id is None :
             encryption_id=kims_api.CreateEncryptedKey(context.project_id)
 
         volume_properties = {
