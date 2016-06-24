@@ -312,7 +312,7 @@ class API(base.Base):
                          "backup %(backup_id)s"),
                      {'size': vol_size, 'backup_id': backup_id},
                      context=context)
-            volume = self.volume_api.create(context, vol_size, name, description, backup_id=backup_id,volume_type=volume_type_obj,encrypted=encrypted)
+            volume = self.volume_api.create(context, vol_size, name, description, backup_id=backup_id,hdd_type=volume_type_obj,encrypted=encrypted)
             volume_id = volume['id']
 
             while True:
