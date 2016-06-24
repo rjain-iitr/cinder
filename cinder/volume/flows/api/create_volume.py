@@ -490,7 +490,7 @@ class EntryCreateTask(flow_utils.CinderTask):
                     'source_volid', 'volume_type_id', 'encryption_key_id',
                     'source_replicaid', 'consistencygroup_id',
                     'cgsnapshot_id', 'multiattach','volume_from_cache',
-                    'backup_id','encrypted']
+                    'backup_id','encrypted','hdd_type']
         super(EntryCreateTask, self).__init__(addons=[ACTION],
                                               requires=requires)
         self.db = db
@@ -518,7 +518,7 @@ class EntryCreateTask(flow_utils.CinderTask):
         encryption_id=None
         if encrypted == 1 and snapshot_id is None :
             encryption_id=kims_api.CreateEncryptedKey(context.project_id)
-
+        hdd_type=kwargs.pop('hdd_type')
         volume_properties = {
             'size': kwargs.pop('size'),
             'user_id': context.user_id,
@@ -542,6 +542,7 @@ class EntryCreateTask(flow_utils.CinderTask):
         volume_properties.update(kwargs)
         # This method rewrites the update snapshot_id field and hence we need to repopulate it again
         volume_properties['snapshot_id'] = snapshot_id
+        volume_properties['volume_type_id'] = hdd_type['id']
         volume = self.db.volume_create(context, volume_properties)
 
         return {
