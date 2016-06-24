@@ -290,7 +290,7 @@ class API(base.Base):
         volume_type=backup['volume_type_id']
         volume_type_obj=None
         if volume_type is not None:
-                 volume_type_obj=volume_types.get_volume_type(context, volume_type)
+                 volume_type_obj=volume_types.get_volume_type(context, "standard")
         # Create a volume if none specified. If a volume is specified check
         # it is large enough for the backup
         if volume_id is None:
