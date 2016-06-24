@@ -228,7 +228,7 @@ class API(base.Base):
             raise exception.InvalidVolume(reason=msg)
         volume_type_id=volume['volume_type_id']
         if volume_type_id is None:
-            volume_type_id=volume_types.get_volume_type_by_name(context."standard")
+            volume_type_id=volume_types.get_volume_type_by_name(context,"standard")
         options = {'user_id': context.user_id,
                    'project_id': context.project_id,
                    'display_name': name,
@@ -290,7 +290,7 @@ class API(base.Base):
         volume_type=backup['volume_type_id']
         volume_type_obj=None
         if volume_type is not None:
-                 volume_type_obj=volume_types.get_volume_type(context, "standard")
+                 volume_type_obj=volume_types.get_volume_type(context, volume_type)
         # Create a volume if none specified. If a volume is specified check
         # it is large enough for the backup
         if volume_id is None:
