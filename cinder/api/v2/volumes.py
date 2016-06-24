@@ -396,14 +396,14 @@ class VolumeController(wsgi.Controller):
         try:
             if req_volume_type:
                 # if not uuidutils.is_uuid_like(req_volume_type):
-                kwargs['volume_type'] = \
+                kwargs['hdd_type'] = \
                         volume_types.get_volume_type_by_name(
                             context, req_volume_type)
                 #else:
                 #    kwargs['volume_type'] = volume_types.get_volume_type(
                 #       context, req_volume_type)
             else:
-                kwargs['volume_type']=volume_types.get_volume_type_by_name(
+                kwargs['hdd_type']=volume_types.get_volume_type_by_name(
                                      context, "standard")
         except exception.VolumeTypeNotFound:
             msg = _("Volume type not found.")
