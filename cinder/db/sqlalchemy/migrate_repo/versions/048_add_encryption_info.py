@@ -74,7 +74,7 @@ def downgrade(migrate_engine):
     backups = Table('backups', meta, autoload=True)
     encrypted = backups.columns.encrypted
     encryption_id = backups.columns.encryption_id
-    volume_type_id = backups.columns.encryption_id
+    volume_type_id = backups.columns.volume_type_id
 
     try:
         backups.drop_column(encrypted)
