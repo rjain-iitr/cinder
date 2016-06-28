@@ -273,7 +273,7 @@ class API(base.Base):
         return backup
 
     @ReportMetrics("backup-api-restore")
-    def restore(self, context, backup_id, volume_id=None, volume_size=None,name=None,description=None):
+    def restore(self, context, backup_id, volume_id=None, volume_size=None,name=None,description=None,volume_type=None):
         """Make the RPC call to restore a volume backup."""
         check_policy(context, 'restore')
         backup = self.get(context, backup_id)
@@ -287,10 +287,23 @@ class API(base.Base):
             raise exception.InvalidBackup(reason=msg)
         encrypted=backup['encrypted']
         encryption_id=backup['encryption_id']
-        volume_type=backup['volume_type_id']
-        volume_type_obj=None
-        if volume_type is not None:
-                 volume_type_obj=volume_types.get_volume_type(context, volume_type)
+        hdd_type=None
+        try:
+            if volume_type:
+                # if not uuidutils.is_uuid_like(req_volume_type):
+                hdd_type = \
+                        volume_types.get_volume_type_by_name(
+                            context, volume_type)
+            else:
+               hdd_type=volume_types.get_volume_type_by_name(
+                                     context, "standard")
+        except exception.VolumeTypeNotFound:
+            msg = _("Volume type not found.")
+            raise exc.HTTPNotFound(explanation=msg)
+        #volume_type=backup['volume_type_id']
+        #volume_type_obj=None
+        #if volume_type is not None:
+        #         volume_type_obj=volume_types.get_volume_type(context, volume_type)
         # Create a volume if none specified. If a volume is specified check
         # it is large enough for the backup
         if volume_id is None:
@@ -312,7 +325,7 @@ class API(base.Base):
                          "backup %(backup_id)s"),
                      {'size': vol_size, 'backup_id': backup_id},
                      context=context)
-            volume = self.volume_api.create(context, vol_size, name, description, backup_id=backup_id,hdd_type=volume_type_obj,encrypted=encrypted)
+            volume = self.volume_api.create(context, vol_size, name, description, backup_id=backup_id,hdd_type=hdd_type,encrypted=encrypted)
             volume_id = volume['id']
 
             while True:
