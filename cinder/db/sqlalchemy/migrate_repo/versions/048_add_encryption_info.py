@@ -15,7 +15,7 @@
 # Copyright (c) 2016 Shishir Gowda <shishir.gowda@ril.com>
 
 from oslo_log import log as logging
-from sqlalchemy import Column, MetaData, Table, Integer,String
+from sqlalchemy import Column, MetaData, Table, Integer,String,Boolean
 
 from cinder.i18n import _LE
 
@@ -27,12 +27,12 @@ def upgrade(migrate_engine):
     meta.bind = migrate_engine
 
     volumes = Table('volumes', meta, autoload=True)
-    encrypted = Column('encrypted', Integer())
+    encrypted = Column('encrypted', Boolean())
     encryption_id = Column('encryption_id', String(255))
 
     try:
         volumes.create_column(encrypted)
-        volumes.update().values(encrypted=0).execute()
+        volumes.update().values(encrypted=False).execute()
         volumes.create_column(encryption_id)
         volumes.update().values(encryption_id=None).execute()
     except Exception:
@@ -40,12 +40,13 @@ def upgrade(migrate_engine):
         raise
 
     backups = Table('backups', meta, autoload=True)
+    encrypted = Column('encrypted', Boolean())
     encryption_id = Column('encryption_id', String(255))
-    volume_type_id =Column('volume_type_id',String(32))
+    volume_type_id = Column('volume_type_id', String(32))
 
     try:
         backups.create_column(encrypted)
-        backups.update().values(encrypted=0).execute()
+        backups.update().values(encrypted=False).execute()
         backups.create_column(encryption_id)
         backups.update().values(encryption_id=None).execute()
         backups.create_column(volume_type_id)
