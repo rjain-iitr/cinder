@@ -62,6 +62,7 @@ class ViewBuilder(common.ViewBuilder):
 
     def detail(self, request, backup):
         """Detailed view of a single backup."""
+        encrypted=backup.get('encrypted')!=False
         return {
             'backup': {
                 'id': backup.get('id'),
@@ -75,6 +76,7 @@ class ViewBuilder(common.ViewBuilder):
                 'description': backup.get('display_description'),
                 'fail_reason': backup.get('fail_reason'),
                 'volume_id': backup.get('volume_id'),
+                'encrypted': encrypted,
                 'links': self._get_links(request, backup['id'])
             }
         }
