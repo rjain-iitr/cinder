@@ -358,7 +358,7 @@ class API(base.Base):
         self.db.backup_update(context, backup_id, {'status': 'restoring'})
         self.db.volume_update(context, volume_id, {'status':
                                                    'restoring-backup'})
-        if encrypted==1:
+        if encrypted==True:
                self.db.volume_update(context, volume_id, {'encryption_id':
                                                     encryption_id})
 

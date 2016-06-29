@@ -89,7 +89,7 @@ class ViewBuilder(common.ViewBuilder):
 
     def _is_volume_encrypted(self, volume):
         """Determine if volume is encrypted."""
-        return volume.get('encrypted') != 0
+        return volume.get('encrypted') != False
 
     def _get_attachments(self, volume):
         """Retrieve the attachments of the volume object."""
