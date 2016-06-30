@@ -1725,6 +1725,11 @@ def volume_attachment_update(context, attachment_id, values):
         return volume_attachment_ref
 
 
+def volume_has_snapshots_filter():
+    return sql.exists().where(
+        and_(models.Volume.id == models.Snapshot.volume_id,
+             ~models.Snapshot.deleted))
+
 def volume_has_attachments_filter():
     return sql.exists().where(
         and_(models.Volume.id == models.VolumeAttachment.volume_id,

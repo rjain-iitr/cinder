@@ -265,6 +265,9 @@ def volume_attachment_get_by_instance_uuid(context, volume_id, instance_uuid):
     return IMPL.volume_attachment_get_by_instance_uuid(context, volume_id,
                                                        instance_uuid)
 
+def volume_has_snapshots_filter():
+    return IMPL.volume_has_snapshots_filter()
+
 def volume_has_attachments_filter():
     return IMPL.volume_has_attachments_filter()
 

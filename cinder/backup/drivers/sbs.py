@@ -781,6 +781,39 @@ class SBSBackupDriver(driver.BackupDriver):
 
         self._download_from_DSS(backup_name, volume_name, ceph_args,
                                 backup['container'], backup)
+
+        return
+
+    def _restore_resize_volume(self, backup, volume_id):
+        backup_id = backup['id']
+        volume = self.db.volume_get(self.context,volume_id)
+        length = int(volume['size']) * units.Gi
+        volume_name = (_("volume-%s" % (volume['id'])))
+
+        # If volume size is > size of snapshot volume, then after a restore
+        # the volume gets shrunk to size of snapshot volume. We need to call
+        # resize of image to expand volume after a restore
+
+        volume_size = int(volume['size'])
+        backup_size = int(backup['size'])
+        if volume_size > backup_size:
+            LOG.info("Expanding volume %s from %dGB to %dGB" %
+                     (volume_id, backup_size, volume_size))
+
+            with rbd_driver.RADOSClient(self, self._ceph_backup_pool) as client:
+                volume_rbd = None
+                volume_rbd = self.rbd.Image(client.ioctx,
+                                            encodeutils.safe_encode(volume_name),
+                                            read_only=False)
+                try:
+                    volume_rbd.resize(length)
+                except exception as e:
+                    errmsg = (_('Failed to expand volume %s') % (volume_id))
+                    LOG.error(errmsg)
+                    raise exception.InvalidBackup(reason=errmsg)
+                finally:
+                    if volume_rbd != None:
+                        volume_rbd.close()
         return
 
     """
@@ -805,6 +838,9 @@ class SBSBackupDriver(driver.BackupDriver):
                 self._restore_rbd(backup_diff, volume_id, volume_file,
                                   ceph_args)
                 i = i+1
+
+            #Check and resize/extend volume if required
+            self._restore_resize_volume(backup, volume_id)
 
             # Be tolerant of IO implementations that do not support fileno()
             try:

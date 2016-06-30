@@ -23,6 +23,9 @@ eventlet.monkey_patch()
 import sys
 import warnings
 
+import resource
+resource.setrlimit(resource.RLIMIT_CORE, (-1, -1))
+
 from cinder import objects
 
 warnings.simplefilter('once', DeprecationWarning)

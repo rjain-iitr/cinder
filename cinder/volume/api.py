@@ -342,45 +342,33 @@ class API(base.Base):
 
             volume_utils.notify_about_volume_usage(context,
                                                    volume, "delete.end")
+            LOG.info(_LI('Successfully issued request to '
+                         'delete volume: %s.'), volume['id'])
             return
-        if volume['attach_status'] == "attached":
-            # Volume is still attached, need to detach first
-            LOG.info(_LI('Unable to delete volume: %s, '
-                         'volume is attached.'), volume['id'])
-            raise exception.VolumeAttached(volume_id=volume_id)
+        
+        # Build required conditions for conditional update
+        expected = {'attach_status': db.Not('attached'),
+                    'migration_status': self.AVAILABLE_MIGRATION_STATUS,
+                    'consistencygroup_id': None}
 
-        if not force and volume['status'] not in ["available", "error",
-                                                  "error_restoring",
-                                                  "error_extending"]:
-            msg = _("Volume status must be available or error, "
-                    "but current status is: %s.") % volume['status']
-            LOG.info(_LI('Unable to delete volume: %(vol_id)s, '
-                         'volume must be available or '
-                         'error, but is %(vol_status)s.'),
-                     {'vol_id': volume['id'],
-                      'vol_status': volume['status']})
-            raise exception.InvalidVolume(reason=msg)
+        # If not force deleting we have status conditions
+        if not force:
+            expected['status'] = ('available', 'error', 'error_restoring',
+                                  'error_extending')
+        
+        filters = [~db.volume_has_snapshots_filter()]
+        now = timeutils.utcnow()
+        values = {'status': 'deleting', 'terminated_at': now}
 
-        if volume['migration_status'] is not None:
-            # Volume is migrating, wait until done
-            LOG.info(_LI('Unable to delete volume: %s, '
-                         'volume is currently migrating.'), volume['id'])
-            msg = _("Volume cannot be deleted while migrating")
-            raise exception.InvalidVolume(reason=msg)
-
-        if volume['consistencygroup_id'] is not None:
-            msg = _("Volume cannot be deleted while in a consistency group.")
-            LOG.info(_LI('Unable to delete volume: %s, '
-                         'volume is currently part of a '
-                         'consistency group.'), volume['id'])
-            raise exception.InvalidVolume(reason=msg)
-
-        snapshots = self.db.snapshot_get_all_for_volume(context, volume_id)
-        if len(snapshots):
-            LOG.info(_LI('Unable to delete volume: %s, '
-                         'volume currently has snapshots.'), volume['id'])
-            msg = _("Volume still has %d dependent "
-                    "snapshots.") % len(snapshots)
+        volumeObject = self._get_volume_(context, volume_id)
+        result = volumeObject.conditional_update(values, expected, filters)
+        
+        if not result:
+            status = utils.build_or_str(expected.get('status'),
+                                        _('status must be %s and'))
+            msg = _('Volume %s must not be migrating, attached, belong to a '
+                    'consistency group or have snapshots.') % status
+            LOG.info(msg)
             raise exception.InvalidVolume(reason=msg)
         backups = self.db.backup_get_all_by_volume(context.elevated(), volume_id)
         if len(backups):
@@ -400,10 +388,6 @@ class API(base.Base):
         encryption_key_id = volume.get('encryption_key_id', None)
         if encryption_key_id is not None:
             self.key_manager.delete_key(context, encryption_key_id)
-
-        now = timeutils.utcnow()
-        self.db.volume_update(context, volume_id, {'status': 'deleting',
-                                                   'terminated_at': now})
 
         self.volume_rpcapi.delete_volume(context, volume, unmanage_only)
         LOG.info(_LI('Successfully issued request to '

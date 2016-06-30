@@ -23,6 +23,9 @@ eventlet.monkey_patch()
 import sys
 import warnings
 
+import resource
+resource.setrlimit(resource.RLIMIT_CORE, (-1, -1))
+
 warnings.simplefilter('once', DeprecationWarning)
 
 from oslo_config import cfg
