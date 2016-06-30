@@ -7,8 +7,27 @@ import MySQLdb
 from cinder import exception
 
 LOG = logging.getLogger(__name__)
+import ConfigParser
+
+import uuid
+
+
+
+config = ConfigParser.ConfigParser()
+config.read('/etc/cinder/kims.conf')
+
+MASTER_KEY =config.get('DEFAULT', 'MASTER_KEY',0)
+USER_NAME =config.get('DB', 'USER_NAME',0)
+USER_PASS =config.get('DB', 'USER_PASS',0)
+DATABASE =config.get('DB', 'DATABASE_NAME',0)
+#db_retries =config.get('DB', 'NO_OF_RETIES',0)
+
+
+
 
 MASTER_KEY="558MI2LKK86CGAJMBVNNCD3KIPZTA4SY"
+MASTER_KEY="f65b950c41db49d7adda8db05dc41c1b"
+#MASTER_KEY=uuid.uuid4()
 def CreateEncryptedKey(project_id):
        user_key=_get_user_deprecated_key(project_id)
        encrypted_key=_create_new_volume_encrypted_key(user_key)
@@ -96,11 +115,18 @@ def _create_new_volume_encrypted_key(user_key):
 
 def _create_new_volume_key():
        #64 Cipher_key + 16 IV
-       key=id_generator(80)
-       return key
+       key1=str(uuid.uuid4())
+       key1=string.replace(key1,'-','')
+       key2=str(uuid.uuid4())
+       key2=string.replace(key2,'-','')
+       key3=str(uuid.uuid4())
+       key3=string.replace(key3,'-','')
+       finalkey=key1+key2+key3[0:16]
+       return finalkey
 
 def _create_new_user_key():
-       key=id_generator(32)
+       key=str(uuid.uuid4())
+       key=string.replace(key,'-','')
        return key
 
 def _encrypt_key(key,encryption_key):
