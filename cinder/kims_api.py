@@ -20,14 +20,11 @@ MASTER_KEY =config.get('DEFAULT', 'MASTER_KEY',0)
 USER_NAME =config.get('DB', 'USER_NAME',0)
 USER_PASS =config.get('DB', 'USER_PASS',0)
 DATABASE =config.get('DB', 'DATABASE_NAME',0)
-#db_retries =config.get('DB', 'NO_OF_RETIES',0)
 
 
 
 
-MASTER_KEY="558MI2LKK86CGAJMBVNNCD3KIPZTA4SY"
 MASTER_KEY="f65b950c41db49d7adda8db05dc41c1b"
-#MASTER_KEY=uuid.uuid4()
 def CreateEncryptedKey(project_id):
        user_key=_get_user_deprecated_key(project_id)
        encrypted_key=_create_new_volume_encrypted_key(user_key)
@@ -54,15 +51,13 @@ def _check_user_encrypted_key(project_id):
 
 def _create_user_encrypted_key(project_id):
        val=0
-       count =0
-       retries=100
        encrypted_key=None
-       while val==0 and count<retries:
-           user_key=_create_new_user_key()
-           encrypted_key=_encrypt_key(user_key,MASTER_KEY)
-           val= _save_in_db(project_id,encrypted_key)
-           count=count+1
-       if val==0 or val==2:
+       user_key=_create_new_user_key()
+       encrypted_key=_encrypt_key(user_key,MASTER_KEY)
+       val= _save_in_db(project_id,encrypted_key)
+       if val==0:
+             encrypted_key=_check_in_db(project_id)
+       if val==2:
              raise Exception('Unable to write in db') 
        return encrypted_key
 
