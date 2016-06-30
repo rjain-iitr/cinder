@@ -26,7 +26,7 @@ from cinder import exception
 from cinder.i18n import _
 from cinder import utils
 from cinder import volume
-
+import cinder.kims_api as kims_api
 
 LOG = logging.getLogger(__name__)
 
@@ -278,6 +278,29 @@ class VolumeActionsController(wsgi.Controller):
         except Exception as error:
             raise webob.exc.HTTPBadRequest(explanation=six.text_type(error))
         return {'os-volume_upload_image': response}
+
+    @wsgi.response(202)
+    @wsgi.action('os-get-plain-text')
+    def _get_plain_text(self, req, id, body):
+        """Uploads the specified volume to image service."""
+        context = req.environ['cinder.context']
+        params = body['os-get-plain-text']
+        if not params.get("project_id"):
+            msg = _("No project_id was specified in request.")
+            raise webob.exc.HTTPBadRequest(explanation=msg)
+        project_id=params.get("project_id")
+
+        if not params.get("encrypted_key"):
+            msg = _("No encrypted_key was specified in request.")
+            raise webob.exc.HTTPBadRequest(explanation=msg)
+        encrypted_key=params.get("encrypted_key")
+
+        try:
+            response = kims_api.GetPlainTextKey(project_id,encrypted_key)
+                                                            
+        except Exception as error:
+            raise webob.exc.HTTPBadRequest(explanation=six.text_type(error))
+        return {'os-get-plain-text': response}
 
     @wsgi.action('os-extend')
     def _extend(self, req, id, body):

@@ -27,7 +27,7 @@ from cinder import quota
 from cinder import utils
 from cinder.volume.flows import common
 from cinder.volume import volume_types
-
+import cinder.kims_api as kims_api
 LOG = logging.getLogger(__name__)
 
 ACTION = 'volume:create'
@@ -489,7 +489,8 @@ class EntryCreateTask(flow_utils.CinderTask):
                     'name', 'reservations', 'size', 'snapshot_id',
                     'source_volid', 'volume_type_id', 'encryption_key_id',
                     'source_replicaid', 'consistencygroup_id',
-                    'cgsnapshot_id', 'multiattach','volume_from_cache','backup_id']
+                    'cgsnapshot_id', 'multiattach','volume_from_cache',
+                    'backup_id','encrypted','hdd_type']
         super(EntryCreateTask, self).__init__(addons=[ACTION],
                                               requires=requires)
         self.db = db
@@ -513,7 +514,11 @@ class EntryCreateTask(flow_utils.CinderTask):
             snapshot_id = kwargs.pop('backup_id')
         except:
             pass
-
+        encrypted=kwargs.pop('encrypted')
+        encryption_id=None
+        if encrypted == True and snapshot_id is None :
+            encryption_id=kims_api.CreateEncryptedKey(context.project_id)
+        hdd_type=kwargs.pop('hdd_type')
         volume_properties = {
             'size': kwargs.pop('size'),
             'user_id': context.user_id,
@@ -527,7 +532,9 @@ class EntryCreateTask(flow_utils.CinderTask):
             'display_name': kwargs.pop('name'),
             'replication_status': 'disabled',
             'multiattach': kwargs.pop('multiattach'),
-            'miscellaneous': misc
+            'miscellaneous': misc,
+            'encrypted':encrypted,
+            'encryption_id':encryption_id
         }
 
         # Merge in the other required arguments which should provide the rest
@@ -535,6 +542,7 @@ class EntryCreateTask(flow_utils.CinderTask):
         volume_properties.update(kwargs)
         # This method rewrites the update snapshot_id field and hence we need to repopulate it again
         volume_properties['snapshot_id'] = snapshot_id
+        volume_properties['volume_type_id'] = hdd_type['id']
         volume = self.db.volume_create(context, volume_properties)
 
         return {

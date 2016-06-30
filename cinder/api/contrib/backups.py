@@ -301,16 +301,17 @@ class BackupsController(wsgi.Controller):
         volume_id = restore.get('volume_id', None)
         volume_size = restore.get('volume_size', None)
         name = restore.get('name', None)
+        volume_type = restore.get('volume_type', None)
         description = restore.get('description', None)
 
         LOG.info(_LI("Restoring backup %(backup_id)s to volume %(volume_id)s"),
-                 {'backup_id': id, 'volume_id': volume_id},
-                 context=context)
+                 {'backup_id': id, 'volume_id': volume_id,
+                  'volume_type' : volume_type},context=context)
 
         try:
             new_restore = self.backup_api.restore(context,
                                                   backup_id=id,
-                                                  volume_id=volume_id, volume_size=volume_size,name=name,description=description)
+                                                  volume_id=volume_id, volume_size=volume_size,name=name,description=description,volume_type=volume_type)
         except exception.InvalidInput as error:
             raise exc.HTTPBadRequest(explanation=error.msg)
         except exception.InvalidVolume as error:

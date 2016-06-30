@@ -203,7 +203,7 @@ class API(base.Base):
                availability_zone=None, source_volume=None,
                scheduler_hints=None,
                source_replica=None, consistencygroup=None,
-               cgsnapshot=None, multiattach=False,volume_from_cache=None, backup_id=None):
+               cgsnapshot=None, multiattach=False,volume_from_cache=None, backup_id=None,encrypted=False,hdd_type=None):
 
         # NOTE(jdg): we can have a create without size if we're
         # doing a create from snap or volume.  Currently
@@ -281,6 +281,8 @@ class API(base.Base):
             'multiattach': multiattach,
             'volume_from_cache':volume_from_cache,
             'backup_id':backup_id,
+            'encrypted':encrypted,
+            'hdd_type':hdd_type,
         }
         try:
             if cgsnapshot:
@@ -1448,6 +1450,10 @@ class API(base.Base):
 
     def _initialize_connection_(self, volume, connector):
         hosts, ports = self._get_mon_addrs()
+        encryption_id=None
+        encrypted=volume['encrypted']
+        if encrypted is True:
+             encryption_id=volume['encryption_id']
         data = {
             'driver_volume_type': 'rbd',
             'data': {
@@ -1458,6 +1464,8 @@ class API(base.Base):
                 'auth_enabled': (self.rbd_user is not None),
                 'auth_username': self.rbd_user,
                 'secret_type': 'ceph',
+                'volume_encrypted':encrypted,
+                'volume_encrypted_key':encryption_id,
                 'secret_uuid': self.rbd_secret_uuid, }
         }
         LOG.debug('connection data: %s', data)

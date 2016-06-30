@@ -38,6 +38,7 @@ from cinder import utils
 import cinder.volume
 from cinder.volume import utils as volume_utils
 from cinder.api.metricutil import ReportMetrics
+from cinder.volume import volume_types
 
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
@@ -225,7 +226,9 @@ class API(base.Base):
             msg = _("Unable to create snapshot of the volume. Volume status must be 'available/in-use'.")
             LOG.error(msg)
             raise exception.InvalidVolume(reason=msg)
-
+        volume_type_id=volume['volume_type_id']
+        if volume_type_id is None:
+            volume_type_id=volume_types.get_volume_type_by_name(context,"standard")
         options = {'user_id': context.user_id,
                    'project_id': context.project_id,
                    'display_name': name,
@@ -235,6 +238,9 @@ class API(base.Base):
                    'container': container,
                    'parent_id': parent_id,
                    'size': volume['size'],
+                   'volume_type_id': volume_type_id,
+                   'encrypted': volume['encrypted'],
+                   'encryption_id': volume['encryption_id'],
                    'host': volume_host, }
         try:
             backup = self.db.backup_create(context, options)
@@ -267,7 +273,7 @@ class API(base.Base):
         return backup
 
     @ReportMetrics("backup-api-restore")
-    def restore(self, context, backup_id, volume_id=None, volume_size=None,name=None,description=None):
+    def restore(self, context, backup_id, volume_id=None, volume_size=None,name=None,description=None,volume_type=None):
         """Make the RPC call to restore a volume backup."""
         check_policy(context, 'restore')
         backup = self.get(context, backup_id)
@@ -279,7 +285,25 @@ class API(base.Base):
         if size is None:
             msg = _('Backup to be restored has invalid size')
             raise exception.InvalidBackup(reason=msg)
-
+        encrypted=backup['encrypted']
+        encryption_id=backup['encryption_id']
+        hdd_type=None
+        try:
+            if volume_type:
+                # if not uuidutils.is_uuid_like(req_volume_type):
+                hdd_type = \
+                        volume_types.get_volume_type_by_name(
+                            context, volume_type)
+            else:
+               hdd_type=volume_types.get_volume_type_by_name(
+                                     context, "standard")
+        except exception.VolumeTypeNotFound:
+            msg = _("Volume type not found.")
+            raise exc.HTTPNotFound(explanation=msg)
+        #volume_type=backup['volume_type_id']
+        #volume_type_obj=None
+        #if volume_type is not None:
+        #         volume_type_obj=volume_types.get_volume_type(context, volume_type)
         # Create a volume if none specified. If a volume is specified check
         # it is large enough for the backup
         if volume_id is None:
@@ -301,7 +325,7 @@ class API(base.Base):
                          "backup %(backup_id)s"),
                      {'size': vol_size, 'backup_id': backup_id},
                      context=context)
-            volume = self.volume_api.create(context, vol_size, name, description, backup_id=backup_id)
+            volume = self.volume_api.create(context, vol_size, name, description, backup_id=backup_id,hdd_type=hdd_type,encrypted=encrypted)
             volume_id = volume['id']
 
             while True:
@@ -334,6 +358,9 @@ class API(base.Base):
         self.db.backup_update(context, backup_id, {'status': 'restoring'})
         self.db.volume_update(context, volume_id, {'status':
                                                    'restoring-backup'})
+        if encrypted==True:
+               self.db.volume_update(context, volume_id, {'encryption_id':
+                                                    encryption_id})
 
         volume_host = volume_utils.extract_host(volume['host'], 'host')
         self.backup_rpcapi.restore_backup(context,
