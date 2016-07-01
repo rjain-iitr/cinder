@@ -56,7 +56,7 @@ def _get_master_key():
           val=_save_in_db("MASTER_KEY",_generated_key)
           if val==1 or val==0:
              _key=_check_in_db("MASTER_KEY")
-          else if val==2:
+          elif val==2:
              raise Exception('Unable to create_Master_key') 
        return _key
 
@@ -71,7 +71,7 @@ def _create_user_encrypted_key(project_id,MASTER_KEY):
        val= _save_in_db(project_id,encrypted_key)
        if val==0:
              encrypted_key=_check_in_db(project_id)
-       else if val==2:
+       elif val==2:
              raise Exception('Unable to write in db') 
        return encrypted_key
 
