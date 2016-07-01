@@ -16,7 +16,6 @@ import uuid
 config = ConfigParser.ConfigParser()
 config.read('/etc/cinder/kims.conf')
 
-MASTER_KEY =config.get('DEFAULT', 'MASTER_KEY',0)
 USER_NAME =config.get('DB', 'USER_NAME',0)
 USER_PASS =config.get('DB', 'USER_PASS',0)
 DATABASE =config.get('DB', 'DATABASE_NAME',0)
@@ -24,7 +23,6 @@ DATABASE =config.get('DB', 'DATABASE_NAME',0)
 
 
 
-MASTER_KEY="f65b950c41db49d7adda8db05dc41c1b"
 def CreateEncryptedKey(project_id):
        user_key=_get_user_deprecated_key(project_id)
        encrypted_key=_create_new_volume_encrypted_key(user_key)
@@ -35,21 +33,37 @@ def GetPlainTextKey(project_id,encrypted_key):
        if user_key is None: 
            raise exception.NotAuthorized()
        #TODO Throw exception
+       MASTER_KEY=_get_master_key()
        user_decrypted_key=_decrypte_key(user_key,MASTER_KEY)
        decrypted_key=_decrypte_key(encrypted_key,user_decrypted_key)
        return decrypted_key
 
 def _get_user_deprecated_key(project_id):
        user_key=_check_user_encrypted_key(project_id)
+       MASTER_KEY=_get_master_key()
        if user_key is None:
-          user_key=_create_user_encrypted_key(project_id)
+          user_key=_create_user_encrypted_key(project_id,MASTER_KEY)
        return _decrypte_key(user_key,MASTER_KEY)
        
 def _check_user_encrypted_key(project_id):
        user_key=_check_in_db(project_id)
        return user_key
 
-def _create_user_encrypted_key(project_id):
+def _get_master_key():
+       _key=_check_in_db("MASTER_KEY")
+       if _key is None:
+          _generated_key=_create_new_master_key()
+          val=_save_in_db("MASTER_KEY",_generated_key)
+          if val==1 or val==0:
+             _key=_check_in_db("MASTER_KEY")
+          else if val==2:
+             raise Exception('Unable to create_Master_key') 
+       return _key
+
+def _create_new_master_key():
+       return _create_new_user_key()
+
+def _create_user_encrypted_key(project_id,MASTER_KEY):
        val=0
        encrypted_key=None
        user_key=_create_new_user_key()
@@ -57,7 +71,7 @@ def _create_user_encrypted_key(project_id):
        val= _save_in_db(project_id,encrypted_key)
        if val==0:
              encrypted_key=_check_in_db(project_id)
-       if val==2:
+       else if val==2:
              raise Exception('Unable to write in db') 
        return encrypted_key
 
