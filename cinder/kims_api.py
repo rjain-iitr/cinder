@@ -33,6 +33,8 @@ def GetPlainTextKey(project_id,encrypted_key):
 
 def _get_user_deprecated_key(project_id):
        user_key=_check_user_encrypted_key(project_id)
+       cmk_id=None
+       version=None
        MASTER_KEY=_get_master_key()
        if user_key is None:
           user_key=_create_user_encrypted_key(project_id,MASTER_KEY)
@@ -50,19 +52,6 @@ def _get_user_encrypted_key_with_encrypted_key(project_id,encrpyted_key):
        #user_key=kims_db.check_in_db(project_id)
        return user_key
 
-def _get_master_key():
-       _key=_check_in_db("MASTER_KEY")
-       #_key=kims_db.check_in_db("MASTER_KEY")
-       if _key is None:
-          _generated_key=_create_new_master_key()
-          val=_save_in_db("MASTER_KEY",_create_cmk_id(),1,datetime.now(),_generated_key)
-          #val=kims_db.save_in_db("MASTER_KEY",_generated_key)
-          if val==1 or val==0:
-             _key=_check_in_db("MASTER_KEY")
-             #_key=kims_db.check_in_db("MASTER_KEY")
-          elif val==2:
-             raise Exception('Unable to create_Master_key') 
-       return _key
 
 def _create_user_encrypted_key(project_id,MASTER_KEY):
        val=0
@@ -81,20 +70,29 @@ def _create_user_encrypted_key(project_id,MASTER_KEY):
 def _check_in_db(project_id):
        db = MySQLdb.connect("localhost","key_user","kmis_pass","kims" )
        cursor = db.cursor()
-       sql = "SELECT user_key FROM cmkkeys WHERE project_id ='%s'" % (project_id)
-       result=None
+       sql = "SELECT cmk_id,version,created_at,user_key FROM cmkkeys WHERE project_id ='%s'" % (project_id)
+       cmk_id=None
+       version=None
+       created_at=None
+       user_key=None
        try:
           cursor.execute(sql)
           row = cursor.fetchone() 
           if row is not None:
-             result= row[0]
+             cmk_id= row[0]
+             version= row[1]
+             created_at= row[2]
+             user_key= row[3]
        except Exception as e:
              LOG.error("Unable to fetch from db",e)
 
        cursor.close()
        db.close()
 
-       return result
+       yield cmk_id
+       yield version
+       yield created_at
+       yield user_key
 
 def _save_in_db(project_id,cmk_id,version,created_at,user_key):
        db = MySQLdb.connect("10.140.12.201","key_user","kmis_pass","kims" )
@@ -119,6 +117,20 @@ def _save_in_db(project_id,cmk_id,version,created_at,user_key):
           
        db.close()
        return returnval
+
+def _get_master_key():
+       _key=_check_in_db("MASTER_KEY")
+       #_key=kims_db.check_in_db("MASTER_KEY")
+       if _key is None:
+          _generated_key=_create_new_master_key()
+          val=_save_in_db("MASTER_KEY",_create_cmk_id(),1,datetime.now(),_generated_key)
+          #val=kims_db.save_in_db("MASTER_KEY",_generated_key)
+          if val==1 or val==0:
+             _key=_check_in_db("MASTER_KEY")
+             #_key=kims_db.check_in_db("MASTER_KEY")
+          elif val==2:
+             raise Exception('Unable to create_Master_key') 
+       return _key
 
 def _create_new_volume_encrypted_key(user_key,cmk_id,version):
        volume_key=_create_new_volume_key()
