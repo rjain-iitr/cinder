@@ -95,7 +95,7 @@ def _create_user_encrypted_key(project_id,MASTER_KEY,cmk_id,version,created_at):
 def _check_in_db(project_id):
        db = MySQLdb.connect("localhost","key_user","kmis_pass","kims" )
        cursor = db.cursor()
-       sql = "SELECT cmk_id,version,created_at,user_key FROM cmkkeys WHERE project_id ='%s'" % (project_id)
+       sql = "SELECT cmk_id,version,created_at,user_key FROM cmkkeys WHERE project_id ='%s' order by version desc" % (project_id)
        cmk_id=None
        version=None
        created_at=None
